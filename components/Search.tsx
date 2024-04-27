@@ -1,9 +1,37 @@
 
 'use client'
 
+import { useDebounce } from "@/hooks/useDebounce";
+import { TDocs } from "@/utils/doc.utils";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import SearchResults from "./SearchResults";
 
-const Search = () => {
+const Search:React.FC<{docs: TDocs[]}>= ({docs}) => {
+
+    const[searchResult, setSearchResult]=useState<TDocs[]>([]);
+    const[searchTerm, setSearchTerm]=useState('');
+const router=useRouter();
+    
+  function closeSearchResults(event:any) {
+    event.preventDefault();
+    router.push(event.target.href);
+    setSearchTerm("");
+  }
+
+    const doSearch = useDebounce((term: string) => {
+        const found = docs.filter(doc => {
+            return (
+                doc.title.toLowerCase().includes(term.toLowerCase()) ||
+                doc.author.toLowerCase().includes(term.toLowerCase()) ||
+                doc.category.toLowerCase().includes(term.toLowerCase()) ||
+                doc.tags.some(tag => tag.toLowerCase().includes(term.toLowerCase()))
+            );
+        });
+        setSearchResult(found);
+    }, 500);
+
   return (
     <div
       className="fixed inset-x-0 top-0 z-50 bg-white bg-white/[var(--bg-opacity-light)] px-4 backdrop-blur-sm transition dark:bg-[#17181C] dark:backdrop-blur sm:px-6 lg:left-72 lg:z-30 lg:px-8 xl:left-80"
@@ -22,12 +50,25 @@ const Search = () => {
             height={100}
             alt=""
             src="/search.svg" className="h-5 w-5" />
-            <input type="text" placeholder="Search..." className="flex-1 focus:border-none focus:outline-none" />
+            <input
+            
+            value={searchTerm}
+            onChange={e=>{
+                const value=e.target.value
+                doSearch(value);
+
+                setSearchTerm(value)}}
+            type="text" placeholder="Search..." className="flex-1 focus:border-none focus:outline-none" />
             <kbd className="ml-auto w-auto text-2xs text-zinc-400 dark:text-zinc-500">
               <kbd className="font-sans">Ctrl </kbd>
               <kbd className="font-sans">K</kbd></kbd>
           </button>
+
         </div>
+
+        {searchTerm && searchTerm.trim().length > 0 && (
+          <SearchResults searchResult={searchResult} searchTerm={searchTerm} closeSearchResults={closeSearchResults} />
+      )}
 
         <div className="flex items-center gap-5 lg:hidden">
           <button type="button"
