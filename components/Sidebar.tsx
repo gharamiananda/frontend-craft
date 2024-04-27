@@ -1,16 +1,71 @@
+'use client';
+
+import { TDocs, getDocumentsByAuthor, getDocumentsByCategory, getDocumentsByTag } from "@/utils/doc.utils";
 import Link from "next/link";
-import React from "react";
+import { usePathname } from "next/navigation";
+import React, { useEffect, useState } from "react";
 
-const Sidebar:React.FC<{docs:Record<string,unknown>[]}>  = ({ docs }) => {
-    const roots = docs.filter((doc) => !doc.parent);
+const Sidebar:React.FC<{docs: TDocs[]}>  = ({ docs }) => {
 
-    const nonRoots = Object.groupBy(
-        docs.filter((doc) => doc.parent as string),
-        ({ parent}:{parent:string}) => parent
-    );
+    const pathname=usePathname();
+    const [rootNodes, setRootNodes] = useState<TDocs[]>([]);
+    const [nonRootNodesGrouped, setNonRootNodesGrouped] = useState<Record<string,TDocs[]>>({});
 
-    console.log('nonRoots', nonRoots)
+    useEffect(()=>{
+  
+    
 
+        let matchedDocs=docs;
+        if(pathname.includes('/tags')){
+            const tag=pathname.split('/')[2];
+            matchedDocs=getDocumentsByTag(docs, tag);
+        }else  if(pathname.includes('/authors')){
+            const authors=pathname.split('/')[2];
+        
+              matchedDocs=getDocumentsByAuthor(docs, authors);
+
+        }else  if(pathname.includes('/categories')){
+            const categories=pathname.split('/')[2];
+        
+              matchedDocs=getDocumentsByCategory(docs, categories);
+
+        }
+
+        const roots = matchedDocs.filter((post) => !post.parent)
+
+        const nonRoots = Object.groupBy(
+        matchedDocs.filter((post) => post.parent),
+        ({ parent }:any) => parent
+        );
+
+        const nonRootsKeys = Reflect.ownKeys(nonRoots);
+        nonRootsKeys.forEach(key => {
+            const foundInRoots = roots.find((root) => root.id === key);
+            if(!foundInRoots) {
+                const foundInDocs = docs.find((doc) => doc.id === key);
+                roots.push(foundInDocs as any);
+            }
+        });
+
+        roots.sort((a, b) => {
+            if (a.order < b.order) {
+              return -1;
+            }
+            if (a.order > b.order) {
+              return 1;
+            }
+            return 0;
+          });
+
+        setNonRootNodesGrouped(nonRoots);
+        setRootNodes(roots)
+
+      
+    },[pathname])
+
+  
+
+   
     return (
         <nav className="lg:block my-10">
             <ul>
@@ -19,7 +74,7 @@ const Sidebar:React.FC<{docs:Record<string,unknown>[]}>  = ({ docs }) => {
                     <div className="absolute inset-y-0 left-2 w-px bg-zinc-900/10 dark:bg-white/5"></div>
                     <div className="absolute left-2 h-6 w-px bg-emerald-500"></div>
                     <ul role="list" className="border-l border-transparent">
-                        {roots.map((rootNode) => (
+                        {rootNodes.map((rootNode) => (
                             <li key={rootNode.id as string} className="relative">
                                 <Link
                                     aria-current="page"
@@ -30,13 +85,13 @@ const Sidebar:React.FC<{docs:Record<string,unknown>[]}>  = ({ docs }) => {
                                         {rootNode.title as string}
                                     </span>
                                 </Link>
-                                {nonRoots[rootNode.id] && (
+                                {nonRootNodesGrouped[rootNode.id] && (
                                     <ul
                                         role="list"
                                         className="border-l border-transparent"
                                     >
-                                        {nonRoots[rootNode.id].map(
-                                            (subRoot:Record<string,unknown>) => (
+                                        {nonRootNodesGrouped[rootNode.id].map(
+                                            (subRoot:any) => (
                                                 <li key={subRoot.id as string}>
                                                     <Link
                                                         className="flex justify-between gap-2 py-1 pl-7 pr-3 text-sm text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"

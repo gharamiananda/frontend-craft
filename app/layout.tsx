@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
 
-  const allDocuments:Record<string,unknown>[]=getDocuments();
+  const allDocuments=getDocuments();
   
   return (
     <html lang="en">

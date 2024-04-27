@@ -6,7 +6,7 @@ const Logo = () => {
     <div className="hidden lg:flex">
       <Link aria-label="Home" href="/">
         <Image
-         src="./icons/logo.svg"
+         src="/logo.svg"
          width={100}
          height={24}
          alt="Protocol" className="h-6 w-auto"

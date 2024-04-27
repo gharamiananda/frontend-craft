@@ -8,7 +8,6 @@ import html from "remark-html";
 const postsDirectory = path.join(process.cwd(), "docs");
 
 export function getDocuments() {
-    console.log(postsDirectory);
     const fileNames = fs.readdirSync(postsDirectory);
 
     const allDocumnets = fileNames.map((fileName) => {
@@ -18,13 +17,22 @@ export function getDocuments() {
 
         const fileContents = fs.readFileSync(fullPath, "utf8");
 
-        const matterResult = matter(fileContents);
+        const matterResult :any= matter(fileContents);
 
-        return {
-            id,
-            order:matterResult.data?.order,
-            ...matterResult.data,
-        };
+
+        const returnObj:   {
+            id: string,
+            order: number,
+            title: string,
+            date: string,
+            parent: string,
+            author:string,
+            category: string,
+            tags:string[],
+          }={ id,
+            ...matterResult.data,}
+    
+        return returnObj
     });
 
     return allDocumnets.sort((a, b) => {
@@ -42,15 +50,26 @@ export async function getDocumentContent(id:string) {
     const fullPath = path.join(postsDirectory, `${id}.md`);
     const fileContents = fs.readFileSync(fullPath, "utf8");
 
-    const matterResult = matter(fileContents);
+    const matterResult:any = matter(fileContents);
 
     const processedContent = await remark().use(html).process(matterResult.content);
 
     const contentHtml = processedContent.toString();
 
-    return {
-        id,
+    const returnObj:   {
+        id: string,
+        order: undefined|number,
+        title: string,
+        date: string,
+        parent: string,
+        author:string,
+        category: string,
+        tags:string[],
+        contentHtml:string,
+      }={ id,
         contentHtml,
-        ...matterResult.data,
-    }
+        ...matterResult.data,}
+
+    return returnObj
+    
 }
