@@ -9,7 +9,7 @@ const Sidebar:React.FC<{docs: TDocs[]}>  = ({ docs }) => {
 
     const pathname=usePathname();
     const [rootNodes, setRootNodes] = useState<TDocs[]>([]);
-    const [nonRootNodesGrouped, setNonRootNodesGrouped] = useState<Record<string,TDocs[]>>({});
+    const [nonRootNodesGrouped, setNonRootNodesGrouped] = useState<any>({});
 
     useEffect(()=>{
   
